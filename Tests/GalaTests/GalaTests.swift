@@ -1,8 +1,8 @@
 import Testing
-@testable import MyML
+@testable import Gala
 
 @Test func example() async throws {
-    // Write your test here and use APIs like `#expect(...)` to check expected conditions.
-    // Swift Testing Documentation
-    // https://developer.apple.com/documentation/testing
+   let tensor = Tensor.zeros(shape: [1, 1, 1], dtype: .float32, device: .cpu)
+   let tensor_real = tensor.realize()
+   print(tensor_real)
 }

@@ -16,14 +16,18 @@ let package = Package(
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "GalaCore"
+            name: "GalaCore",
         ),
         .target(
             name: "Gala",
-            dependencies: ["GalaCore"]
+            dependencies: ["GalaCore", "GalaScheduler"]
         ),
         .target(
             name: "GalaBackendCPU",
+            dependencies: ["GalaCore"]
+        ),
+        .target(
+            name: "GalaScheduler",
             dependencies: ["GalaCore"]
         ),
         .testTarget(

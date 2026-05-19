@@ -45,6 +45,11 @@ public class GraphNode {
         id = UUID()
     }
 
+    package func setStorage(_ buffer: any StorageBuffer) {
+        guard storage == nil else { fatalError("GraphNode storage already realized") }
+        self.storage = buffer
+    }
+
     public private(set) var storage: StorageBuffer?
 
     // Autograd fields
