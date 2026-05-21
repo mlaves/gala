@@ -19,12 +19,16 @@ let package = Package(
             name: "GalaCore",
         ),
         .target(
-            name: "Gala",
+            name: "GalaBackendCPU",
+            dependencies: ["GalaCore"]
+        ),
+        .target(
+            name: "GalaDispatch",
             dependencies: ["GalaCore", "GalaBackendCPU"]
         ),
         .target(
-            name: "GalaBackendCPU",
-            dependencies: ["GalaCore"]
+            name: "Gala",
+            dependencies: ["GalaCore", "GalaDispatch"]
         ),
         .testTarget(
             name: "GalaTests",

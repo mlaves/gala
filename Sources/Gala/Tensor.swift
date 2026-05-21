@@ -1,5 +1,5 @@
 import GalaCore
-import GalaScheduler
+import GalaDispatch
 
 public struct Tensor {
     public let node: GraphNode  // the computation that produces this
