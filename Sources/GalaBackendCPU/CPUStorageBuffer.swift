@@ -1,28 +1,32 @@
 import GalaCore
 
-public class CPUStorageBuffer : StorageBuffer {
-    public let device: Device
-    public let shape: [Int]
-    public let dtype: DType
-    let buffer: UnsafeMutableBufferPointer<UInt8>
+package class CPUStorageBuffer : StorageBuffer {
+    package let device: Device = .cpu
+    package let shape: [Int]
+    package let dtype: DType
+    internal let buffer: UnsafeMutableRawBufferPointer
 
-    internal init(device: Device, shape: [Int], dtype: DType) {
-        self.device = device
+    internal init(_ shape: [Int], _ dtype: DType) {
         self.shape = shape
         self.dtype = dtype
         let byteCount = shape.reduce(1, *) * dtype.byteSize
-        buffer = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: byteCount)
+        buffer = UnsafeMutableRawBufferPointer.allocate(byteCount: byteCount, alignment: MemoryLayout<Int>.alignment)
     }
 
     deinit {
         buffer.deallocate()
     }
 
-    public func copyIn(from: UnsafeBufferPointer<UInt8>) {
+    package func float32(at index: Int) -> Float32 {
+        let byteOffset = index * MemoryLayout<Float32>.stride
+        return buffer.baseAddress!.advanced(by: byteOffset).withMemoryRebound(to: Float32.self, capacity: 1, { $0.pointee })
+    }
+
+    package func copyIn(from: UnsafeBufferPointer<UInt8>) {
         fatalError("Not implemented")
     }
 
-    public func copyOut(to: UnsafeMutableBufferPointer<UInt8>) {
+    package func copyOut(to: UnsafeMutableBufferPointer<UInt8>) {
         fatalError("Not implemented")
     }
 }

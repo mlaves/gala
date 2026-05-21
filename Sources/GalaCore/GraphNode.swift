@@ -1,24 +1,24 @@
 import Foundation
 
 public enum Device {
-    case cpu, metal
+    case cpu //, metal
 }
 
 public enum DType {
-    case float32, float16, bfloat16, int32, bool
+    case float32 //, float16, bfloat16, int32, bool
 
     public var byteSize: Int {
         switch self {
             case .float32:
                 return 4
-            case .float16:
-                return 2
-            case .bfloat16:
-                return 2
-            case .int32:
-                return 4
-            case .bool:
-                return 1
+            // case .float16:
+            //     return 2
+            // case .bfloat16:
+            //     return 2
+            // case .int32:
+            //     return 4
+            // case .bool:
+            //     return 1
         }
     }
 }

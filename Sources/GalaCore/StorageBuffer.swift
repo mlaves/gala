@@ -5,4 +5,6 @@ public protocol StorageBuffer {
 
     mutating func copyIn(from: UnsafeBufferPointer<UInt8>)
     func copyOut(to: UnsafeMutableBufferPointer<UInt8>)
+
+    func float32(at index: Int) -> Float32
 }
