@@ -3,15 +3,12 @@ import GalaDispatch
 
 public struct Tensor {
     public let node: GraphNode  // the computation that produces this
-    public let device: Device
-    public let shape: [Int]
-    public let dtype: DType
+    public var device: Device { node.device }
+    public var shape: [Int] { node.shape }
+    public var dtype: DType { node.dtype }
 
     internal init(node: GraphNode) {
         self.node = node
-        device = node.device
-        shape = node.shape
-        dtype = node.dtype
     }
 
     public static func zeros(shape: [Int], dtype: DType, device: Device) -> Tensor {
@@ -22,7 +19,13 @@ public struct Tensor {
         return Tensor(node: GraphNode(op: Op.ones, device: device, shape: shape, dtype: dtype))
     }
 
-    // Materialization pulls the tensor out of the lazy graph
+    public static func fromData(shape: [Int], dtype: DType, device: Device, data: UnsafeRawBufferPointer) -> Tensor {
+        let tensor = Tensor(node: GraphNode(op: Op.fromData(ptr: data), device: device, shape: shape, dtype: dtype))
+        try! tensor.realize()
+        return tensor
+    }
+
+    // Realization pulls the tensor out of the lazy graph
     // This is where device dispatch actually fires
     public func realize() throws {
         if node.storage != nil { return }
@@ -33,12 +36,12 @@ public struct Tensor {
         }
     }
 
-    subscript(_ indices: Int...) -> Float32? {
+    subscript(_ indices: Int...) -> ScalarValue? {
         guard indices.count == shape.count else { return nil }
         guard zip(indices, shape).allSatisfy({$0 >= 0 && $0 < $1}) else { return nil }
 
         var strides = [1]
-        for s in shape.dropLast() {
+        for s in shape.reversed().dropLast() {
             strides.append(s*strides.last!)
         }
         strides = strides.reversed()
@@ -48,7 +51,16 @@ public struct Tensor {
 
         let flatIndex = zip(indices, strides).reduce(0) { $0 + $1.0 * $1.1 }
 
-        return storage.float32(at: flatIndex)
+        return storage.scalar(at: flatIndex)
+    }
+
+    private func add(other: Tensor) -> Tensor {
+        precondition(self.shape == other.shape, "shape mismatch: \(self.shape) vs \(other.shape)")
+        return Tensor(node: GraphNode(op: Op.add, inputs: [self.node, other.node], device: device, shape: shape, dtype: dtype))
+    }
+
+    static func +(left: Tensor, right: Tensor) -> Tensor {
+        return left.add(other: right)
     }
 
     // Autograd hooks live here, but empty now

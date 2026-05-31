@@ -1,6 +1,6 @@
 import GalaCore
 
-package class CPUStorageBuffer : StorageBuffer {
+package class CPUStorageBuffer: StorageBuffer {
     package let device: Device = .cpu
     package let shape: [Int]
     package let dtype: DType
@@ -17,16 +17,39 @@ package class CPUStorageBuffer : StorageBuffer {
         buffer.deallocate()
     }
 
-    package func float32(at index: Int) -> Float32 {
-        let byteOffset = index * MemoryLayout<Float32>.stride
-        return buffer.baseAddress!.advanced(by: byteOffset).withMemoryRebound(to: Float32.self, capacity: 1, { $0.pointee })
+    internal func typed<T>(as: T.Type) -> UnsafeMutableBufferPointer<T> {
+        return buffer.assumingMemoryBound(to: T.self)
     }
 
-    package func copyIn(from: UnsafeBufferPointer<UInt8>) {
-        fatalError("Not implemented")
+    package func cast(to: DType) -> CPUStorageBuffer {
+        let from = dtype
+        if from == to { return self }
+        let result = CPUStorageBuffer(shape, to)
+
+        switch (from, to) {
+            case (.int32, .float32):
+                let src = self.typed(as: Int32.self)
+                let dst = result.typed(as: Float.self)
+                precondition(src.count == dst.count)
+                for i in 0..<src.count {
+                    dst[i] = Float(src[i])
+                }
+            case (.float32, .int32):
+                let src = self.typed(as: Float.self)
+                let dst = result.typed(as: Int32.self)
+                precondition(src.count == dst.count)
+                for i in 0..<src.count {
+                    dst[i] = Int32(src[i])
+                }
+            default: fatalError("cast error: could not cast from \(dtype) to \(to)")
+        }
+        return result
     }
 
-    package func copyOut(to: UnsafeMutableBufferPointer<UInt8>) {
-        fatalError("Not implemented")
+    package func scalar(at index: Int) -> ScalarValue {
+        switch dtype {
+            case .float32: return .float32(typed(as: Float.self)[index])
+            case .int32: return .int32(typed(as: Int32.self)[index])
+        }
     }
 }

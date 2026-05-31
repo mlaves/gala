@@ -5,20 +5,51 @@ public enum Device {
 }
 
 public enum DType {
-    case float32 //, float16, bfloat16, int32, bool
+    case float32, int32 //, float16, bfloat16 bool
 
     public var byteSize: Int {
         switch self {
             case .float32:
                 return 4
+            case .int32:
+                return 4
             // case .float16:
             //     return 2
             // case .bfloat16:
             //     return 2
-            // case .int32:
-            //     return 4
             // case .bool:
             //     return 1
+        }
+    }
+
+    public static func promote(_ a: DType, _ b: DType) -> DType {
+        if a == b { return a }
+        return .float32
+    }
+}
+
+public enum ScalarValue {
+    case float32(Float)
+    case int32(Int32)
+
+    public var dtype: DType {
+        switch self {
+        case .float32: return .float32
+        case .int32:   return .int32
+        }
+    }
+
+    public var asFloat: Float {
+        switch self {
+            case .float32(let x): return x
+            case .int32(let x): return Float(x)
+        }
+    }
+
+    public var asInt32: Int32 {
+        switch self {
+            case .float32(let x): return Int32(x)
+            case .int32(let x): return x
         }
     }
 }
@@ -26,6 +57,10 @@ public enum DType {
 public enum Op {
     // Creation
     case zeros, ones
+    case fromData(ptr: UnsafeRawBufferPointer)
+
+    // Binary
+    case add
 }
 
 public class GraphNode {
@@ -35,6 +70,7 @@ public class GraphNode {
     public let id: UUID
     public let op: Op
     public let inputs: [GraphNode]
+    package private(set) var storage: StorageBuffer?
 
     public init(op: Op, inputs: [GraphNode] = [], device: Device, shape: [Int], dtype: DType) {
         self.device = device
@@ -49,8 +85,6 @@ public class GraphNode {
         guard storage == nil else { fatalError("GraphNode storage already realized") }
         self.storage = buffer
     }
-
-    public private(set) var storage: StorageBuffer?
 
     // Autograd fields
     public var savedForBackward: [GraphNode] = []
